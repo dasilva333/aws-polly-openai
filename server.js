@@ -20,12 +20,26 @@ const polly = new PollyClient({
     }
 });
 
+const EMOJI_REGEX = /[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F]+/gu;
+
+function sanitizePollyText(input) {
+    if (!input) return '';
+    console.log(`[${new Date().toISOString()}] Polly raw input: ${input}`);
+    const stripped = input.replace(EMOJI_REGEX, ' ');
+    if (stripped !== input) {
+        console.log(`[${new Date().toISOString()}] Polly removed emoji from input.`);
+    }
+    const normalized = stripped.replace(/\s+/g, ' ').trim();
+    console.log(`[${new Date().toISOString()}] Polly sanitized input: ${normalized}`);
+    return normalized;
+}
+
 /**
  * Converts text into SSML, wrapping *asterisk blocks* with prosody effects.
  */
 function convertToSSML(text) {
     // Escape XML special characters
-    const escapedText = text
+    let processed = text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -33,9 +47,12 @@ function convertToSSML(text) {
         .replace(/'/g, '&apos;');
 
     // Wrap *narrative* with a dramatic pause and x-slow rate
-    const ssmlContent = escapedText.replace(/\*([^*]+)\*/g, '<break time="400ms"/><prosody rate="x-slow" volume="soft"> $1 </prosody><break time="400ms"/>');
+    processed = processed.replace(/\*([^*]+)\*/g, '<break time="400ms"/><prosody rate="x-slow" volume="soft"> $1 </prosody><break time="400ms"/>');
 
-    return `<speak version="1.1" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">${ssmlContent}</speak>`;
+    // Handle ~ (Tilde) -> Pause + "glitch"
+    processed = processed.replace(/~/g, ' <break time="200ms"/> glitch ');
+
+    return `<speak version="1.1" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">${processed}</speak>`;
 }
 
 /**
@@ -71,11 +88,14 @@ async function synthesizeSpeechPolly(text, voiceId, engine = 'neural', textType 
  * OpenAI-Compatible Endpoint
  */
 app.post('/v1/audio/speech', async (req, res) => {
-    const { input, voice } = req.body;
-    console.log(`[${new Date().toISOString()}] Received request: "${input.substring(0, 50)}..."`);
+    const { input } = req.body;
+    if (typeof input !== 'string' || !input.trim()) {
+        return res.status(400).json({ error: 'Invalid input text' });
+    }
+    const sanitized = sanitizePollyText(input);
 
     try {
-        const ssml = convertToSSML(input);
+        const ssml = convertToSSML(sanitized);
         const voiceId = 'Ivy';
         const engine = 'neural';
 
