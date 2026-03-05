@@ -33,7 +33,9 @@ const polly = new PollyClient({
     }
 });
 
-const EMOJI_REGEX = /[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F]+/gu;
+// Emoji regex: Strips pictographic emoji but preserves digits 0-9.
+// Note: \p{Emoji} includes ASCII digits per Unicode, so we avoid it.
+const EMOJI_REGEX = /(?!\d)[\p{Extended_Pictographic}\p{Emoji_Presentation}]\uFE0F?/gu;
 
 function sanitizePollyText(input) {
     if (!input) return '';
