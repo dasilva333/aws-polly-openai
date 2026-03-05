@@ -19,6 +19,8 @@ const profile = profiles.catgirl;
 // Or we just redefine it here to ensure we generate exactly what the server would output
 function convertToSSML(text) {
     // 0. Emoticon & Vocalization sanitation (Matches server.js sanitizePollyText)
+    text = text.replace(/\bHR\b/g, 'H.R.');
+    text = text.replace(/\bIT\b/g, 'I.T.');
     const hmphRegex = /\b(m+p+h+|h+u*m+p*[hf]+|h+u+h+m+p+|h+o+m+p+)\b/gi;
     if (profile.hmph) text = text.replace(hmphRegex, profile.hmph);
 

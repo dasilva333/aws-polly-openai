@@ -41,6 +41,10 @@ function sanitizePollyText(input) {
 
     let processed = input;
 
+    // Global acronym replacements (case-sensitive to avoid breaking words like "it")
+    processed = processed.replace(/\bHR\b/g, 'H.R.');
+    processed = processed.replace(/\bIT\b/g, 'I.T.');
+
     // Replace variations of "hmph", "mph", "mmph", "humpf", "hoomp" with the profile's specified sound
     // - m+p+h+: mph, mmph
     // - h+u*m+p*[hf]+: humf, hmph, humph, hmpf, humpf
@@ -179,6 +183,6 @@ app.post('/v1/audio/speech', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`AWS Polly TTS server listening on port ${port}`);
 });
