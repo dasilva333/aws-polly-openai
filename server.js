@@ -157,6 +157,23 @@ async function synthesizeSpeechPolly(text, voiceId, engine = 'neural', textType 
 }
 
 /**
+ * OpenAI-Compatible Models Endpoint
+ */
+app.get('/v1/models', (req, res) => {
+    res.json({
+        object: "list",
+        data: [
+            {
+                id: "tts-1",
+                object: "model",
+                created: Math.floor(Date.now() / 1000),
+                owned_by: "aws-polly"
+            }
+        ]
+    });
+});
+
+/**
  * OpenAI-Compatible Endpoint
  */
 app.post('/v1/audio/speech', async (req, res) => {
