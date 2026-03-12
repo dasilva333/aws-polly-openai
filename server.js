@@ -24,6 +24,21 @@ if (profileArg) {
 const profile = profiles[activeProfileName] || profiles.catgirl;
 console.log(`[${new Date().toISOString()}] Starting with profile: ${activeProfileName}`);
 
+// Valid AWS Polly voices for validation/fallback
+const VALID_VOICES = new Set([
+    'Lotte', 'Maxim', 'Ayanda', 'Salli', 'Ola', 'Arthur', 'Ida', 'Tomoko', 'Remi', 'Geraint', 
+    'Miguel', 'Elin', 'Lisa', 'Giorgio', 'Marlene', 'Ines', 'Kajal', 'Zhiyu', 'Zeina', 'Suvi', 
+    'Karl', 'Gwyneth', 'Joanna', 'Lucia', 'Cristiano', 'Astrid', 'Andres', 'Vicki', 'Mia', 
+    'Vitoria', 'Bianca', 'Chantal', 'Raveena', 'Daniel', 'Amy', 'Liam', 'Ruth', 'Kevin', 
+    'Brian', 'Russell', 'Aria', 'Matthew', 'Aditi', 'Zayd', 'Dora', 'Enrique', 'Hans', 
+    'Danielle', 'Hiujin', 'Carmen', 'Sofie', 'Gregory', 'Ivy', 'Ewa', 'Maja', 'Gabrielle', 
+    'Nicole', 'Filiz', 'Camila', 'Jacek', 'Jasmine', 'Thiago', 'Justin', 'Celine', 'Kazuha', 
+    'Kendra', 'Arlet', 'Ricardo', 'Mads', 'Hannah', 'Mathieu', 'Lea', 'Sergio', 'Hala', 
+    'Tatyana', 'Penelope', 'Naja', 'Olivia', 'Ruben', 'Laura', 'Takumi', 'Mizuki', 'Carla', 
+    'Conchita', 'Jan', 'Kimberly', 'Liv', 'Adriano', 'Lupe', 'Joey', 'Pedro', 'Seoyeon', 
+    'Emma', 'Niamh', 'Stephen'
+]);
+
 // AWS Polly Client Setup
 const polly = new PollyClient({
     region: process.env.AWS_REGION || 'us-east-1',
@@ -185,7 +200,14 @@ app.post('/v1/audio/speech', async (req, res) => {
 
     try {
         const ssml = convertToSSML(sanitized);
-        const voiceId = 'Ivy';
+        
+        // Validate requested voice against allowed AWS Polly voices, default to 'Joey'
+        let voiceId = req.body.voice || 'Joey';
+        if (!VALID_VOICES.has(voiceId)) {
+            console.log(`[${new Date().toISOString()}] Invalid voice '${voiceId}' requested. Falling back to 'Joey'.`);
+            voiceId = 'Joey';
+        }
+        
         const engine = 'neural';
 
         console.log(` Generating speech via SSML (Voice: ${voiceId})`);
